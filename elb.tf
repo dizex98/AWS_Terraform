@@ -1,7 +1,6 @@
 resource "aws_elb" "main_elb" {
   name               = "main-elb"
   subnets = [aws_subnet.public_subnet_1.id,aws_subnet.public_subnet_2.id]
-#   security_groups = [aws_security_group.main.id]
 
   listener {
     instance_port     = 8000
@@ -26,7 +25,6 @@ resource "aws_elb" "main_elb" {
     interval            = 30
   }
 
-#   instances = [aws_instance.first-instance.id,aws_instance.second-instance.id]
   cross_zone_load_balancing   = true
   idle_timeout                = 400
   connection_draining         = true

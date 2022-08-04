@@ -1,35 +1,47 @@
 import boto3
-import pprint
 import json
 
-print("The services that currently in-use are:")
 
-###VPC attributes:
-ec2 = boto3.resource('ec2')
-vpc = ec2.Vpc('vpc-037a6f85bf2004722')
-print("VPC:")
-response = vpc.describe_attribute(
-    Attribute='enableDnsHostnames',
-)
-print(json.dumps(response, sort_keys=False, indent=4))
+def printLabelandResponse(label,response):
+    print()
+    print("----------")
+    print(label)
+    print("----------")
+    print()
+    print(json.dumps(response, sort_keys=False, indent=4, default=str))
 
 
-###Route 53:
-print("Route 53:")
+###EC2 attributes:
+
+
+client = boto3.client('ec2')
+response = client.describe_account_attributes()
+printLabelandResponse("Ec2 Service",response)
+
+
+labels = ["VPC","Internet Gatway","Subnets","Route Tables"]
+functions = [client.describe_vpcs,client.describe_internet_gateways,client.describe_subnets,client.describe_route_tables]
+
+print("The resources under this service are:")
+
+for label, function in zip(labels, functions):
+    response = function()
+    printLabelandResponse(label,response)
+
+client = boto3.client('elb')
+response = client.describe_load_balancers()
+printLabelandResponse("Elastic Load Balancer",response)
+
+
+###Route 53 attributes:
+
 client = boto3.client('route53')
 response = client.list_hosted_zones()
-print(json.dumps(response, sort_keys=False, indent=4))
+printLabelandResponse("Route 53 Service",response)
+
+print("The resources under this service are:")
 
 
-# ###IAM
-# print("IAM:")
-# iam_client = boto3.client("iam")
-# response = iam_client.get_account_authorization_details()
-# print(json.dumps(response, sort_keys=False, indent=4))
-
-# Load Balancer attributes
-# elb = boto3.client('elb')
-# lb_name = "main-elb"
-
-# response = elb.describe_load_balancer_attributes(LoadBalancerName=lb_name)
-# pprint.pprint(response)
+hostedZone = response.get('HostedZones')[0].get('Id')
+response = client.list_resource_record_sets(HostedZoneId=hostedZone)
+printLabelandResponse("Records",response)
